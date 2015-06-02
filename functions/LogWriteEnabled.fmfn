@@ -27,6 +27,8 @@
  *		it to add these two variables to the log, if they are not empty.
  *
  * HISTORY:
+ *		MODIFIED on 2015-JUN-02 Daniel Smith dansmith65@gmail.com
+ *			- bug fix: allow theLogLevel to be less than or equal to ~logLevelToWrite
  *		CREATED on 2014-FEB-05 Daniel Smith dansmith65@gmail.com
  *
  * LINK:
@@ -40,5 +42,5 @@ Let ( [
 		+ $logLevelToWriteOffset
 		+ $$LOGLEVELTOWRITEOFFSET
 ] ;
-	theLogLevel = ~logLevelToWrite
+	theLogLevel ≤ ~logLevelToWrite
 )

@@ -24,9 +24,14 @@
  *			see which files were opened during a single session.
  *
  * HISTORY:
+ *		MODIFIED on 2015-JUN-02 Daniel Smith dansmith65@gmail.com
+ *			- Quote HighContrastState value since it is empty in Web Direct
  *		MODIFIED on 2014-OCT-02 Daniel Smith dansmith65@gmail.com
  *			- update documentation
  *		CREATED on 2014-FEB-05 Daniel Smith dansmith65@gmail.com
+ *
+ * LINK:
+ *		https://github.com/dansmith65/FileMaker-Logger
  * =====================================
  */
 
@@ -46,7 +51,7 @@ If ( IsEmpty ( $$SESSIONID ) ;
 		& "$EncryptionState = " & Quote ( Get ( EncryptionState ) ) & " ;¶"
 		& "$FileMakerPath = " & Quote ( Get ( FileMakerPath ) ) & " ;¶"
 		& "$HighContrastColor = " & Quote ( Get ( HighContrastColor ) ) & " ;¶"
-		& "$HighContrastState = " & Get ( HighContrastState ) & " ;¶"
+		& "$HighContrastState = " & Quote ( Get ( HighContrastState ) ) & " ;¶"
 		& "$HostIPAddress = " & Quote ( Get ( HostIPAddress ) ) & " ;¶"
 		& "$HostName = " & Quote ( Get ( HostName ) ) & " ;¶"
 		& "$InstalledFMPlugins = " & Quote ( Get ( InstalledFMPlugins ) ) & " ;¶"

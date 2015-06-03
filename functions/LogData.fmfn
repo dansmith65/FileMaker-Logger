@@ -21,6 +21,8 @@
  *		your solution.
  *
  * HISTORY:
+ *		MODIFIED on 2015-JUN-02 by Daniel Smith dansmith65@gmail.com
+ *			- include ApplicationVersion for all log levels
  *		MODIFIED on 2014-OCT-02 by Daniel Smith dansmith65@gmail.com
  *			- add: AccountPrivilegeSetName, CurrentPrivilegeSetName, logLevelToWriteOffset, LOGLEVELTOWRITEOFFSETglobal
  *			- move UserName to the ALL LOG LEVELS section (helps to differentiate two users logged on with the same account)
@@ -42,7 +44,8 @@
  *		INSPIRED by ErrorData by matt@filemakermagazine.com
  *			https://github.com/filemakerstandards/fmpstandards/tree/master/Functions
  *
- * REFERENCE:
+ * LINK:
+ *		https://github.com/dansmith65/FileMaker-Logger
  *		http://filemakerstandards.org/x/LACm
  * =====================================
  */
@@ -63,6 +66,7 @@
 & "$ScriptName = " & Quote ( Get ( ScriptName ) ) & " ;¶"
 & "$ScriptParameter = " & Quote ( Get ( ScriptParameter ) ) & " ;¶"
 & "$ScriptResult = " & Quote ( Get ( ScriptResult ) ) & " ;¶"
+& "$ApplicationVersion = " & Quote ( Get ( ApplicationVersion ) ) & " ;¶"
 
 // if account priv. set and current priv. set are different, there are two reasons I know of that can cause this:
 //	1. script was run with Full Access privileges

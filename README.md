@@ -20,6 +20,18 @@ A modular open-source logging framework for [FileMaker](http://filemaker.com).
   - `LogWriters` directory: Additional Log Writer modules.
 
 
+## Getting Started
+
+Most documentation for this project exists in READ ME scripts in the [Log.fmp12](Log.fmp12) file:
+
+  - File Module > READ ME
+  - Modules > Logger > Logger: READ ME
+  - Modules > Log Writer: FM > Log Writer: FM: READ ME
+  - Modules > Log Viewer: FM > Log Viewer: FM: READ ME
+
+Consider using additional [LogWriters](LogWriters). View the READ ME scripts in each of those files if you choose to implement one.
+
+
 ## Log Level
 
 By including a log level with each call to the Logger module, it allows you to write your scripts with debugging code right from the start and leave that debugging code in your script while in production. By using the `LogWriteEnabled` function, you can reduce the overhead imposed by this logging method on code in production by only calling the `Logger` module if logs of the specified level are supposed to be saved.

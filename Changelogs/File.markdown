@@ -8,3 +8,8 @@ detailed list of changes:
 - scripts
 	- modified
 		- updated JSON module to 1.0.6
+- fields
+	- modified
+		- Log::id
+			- don't validate unique
+			  In a hosted (WAN) file with 120,000 records, doing this cut the log creation time almost in half.

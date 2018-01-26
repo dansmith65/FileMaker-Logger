@@ -1,3 +1,15 @@
+## 1.2.0 ##
+
+released 2018-JAN-26
+
+- enhancements
+	- improve JSON web viewer search feature:
+		- improve UI
+			- forward slash key will activate search input (when web viewer is active)
+		- select prev/next found item
+		- expand collapsed items to show selection, if needed
+
+
 ## 1.1.0 ##
 
 released 2017-DEC-01

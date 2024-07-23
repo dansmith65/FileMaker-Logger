@@ -1,3 +1,19 @@
+## 2.1.0 ##
+
+released 2024-JUL-23
+
+- Call startup script to size the window instead of doing it in the Hide Window script.
+- add script that can be called via server schedule to delete old records
+
+detailed list of changes:
+scripts
+	modified
+		Log Viewer: FM: Hide Window
+	added
+		Log Viewer: FM: Delete Old Records
+		Log Viewer: FM: Delete Old Records PSoS
+
+
 # 2.0.0 #
 
 released 2024-JUL-22

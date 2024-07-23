@@ -1,3 +1,19 @@
+## 2.0.1 ##
+
+released 2024-JUL-23
+
+detailed list of changes:
+layouts
+	modified
+		Home
+			- switch location of "hide" and "view log" buttons
+			- hide the "view log" button when it can't be used
+scripts
+	modified
+		Log Viewer module
+			- update from 2.0.0 to 2.1.0
+
+
 # 2.0.0 #
 
 released 2024-JUL-22

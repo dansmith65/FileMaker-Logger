@@ -1,18 +1,19 @@
 /**
  * =====================================
- * LogDataSession
+ * LogDataSession ( JSONLogData )
  *
  * RETURNS:
- *		(string) Let format dictionary containing environmental data
- *			pertaining to the current session.
+ *		(string) JSONLogData with environmental data pertaining to the current session added to it.
+ *
+ * PARAMETERS:
+ *		JSONLogData = (JSONObject) as returned by the LogData function
  *
  * DEPENDENCIES:
  *		$$SESSIONID global variable
  *
  * NOTES:
- *		This function should be modified to capture the relevant session
- *		values for your solution.
- *		Add the data returned by this function to every log entry created.
+ *		This function should be modified to capture the relevant session values for your solution.
+ *		Modify all log entries with this function.
  *		In a multi-file solution, consider these options:
  *
  *		1.	Calling this function from the file that writes the logs will
@@ -24,6 +25,13 @@
  *			see which files were opened during a single session.
  *
  * HISTORY:
+ *		MODIFIED on 2024-JUL-12 Daniel Smith dan@filemaker.consulting
+ *			- add JSONLogData parameter and convert from Let Notation to JSONObject
+ *		MODIFIED on 2024-APR-16 Daniel Smith dan@filemaker.consulting
+ *			- delete: CurrentTimestamp
+ *			- rename HighContrastColor to SystemAppearance
+ *			- add: ApplicationArchitecture, HostApplicationVersion, PersistentID, TimezoneOffset,
+ *			  NetworkType, StatusAreaState, ScreenScaleFactor, multiple Window values
  *		MODIFIED on 2015-JUN-02 Daniel Smith dansmith65@gmail.com
  *			- Quote HighContrastState value since it is empty in Web Direct
  *		MODIFIED on 2014-OCT-02 Daniel Smith dansmith65@gmail.com
@@ -35,35 +43,72 @@
  * =====================================
  */
 
-If ( IsEmpty ( $$SESSIONID ) ;
-	// session has not started yet, so create a session id and return session data
-	Let ( $$SESSIONID = Get ( UUID ) ;
-		""
-		& "$ApplicationLanguage = " & Quote ( Get ( ApplicationLanguage ) ) & " ;¶"
-		& "$ApplicationVersion = " & Quote ( Get ( ApplicationVersion ) ) & " ;¶"
-		& "$ConnectionState = " & Get ( ConnectionState ) & " ;¶"
-		& "$CurrentTimestamp = GetAsTimeStamp ( " & Quote ( Get ( CurrentTimestamp ) ) & " ) ;¶"
-			/**
-			 * CurrentTimestamp: use for determining time zone offset from server
-			 * by comparing the different with Get ( CurrentHostTimestamp )
-			 */
-		& "$Device = " & Get ( Device ) & " ;¶"
-		& "$EncryptionState = " & Quote ( Get ( EncryptionState ) ) & " ;¶"
-		& "$FileMakerPath = " & Quote ( Get ( FileMakerPath ) ) & " ;¶"
-		& "$HighContrastColor = " & Quote ( Get ( HighContrastColor ) ) & " ;¶"
-		& "$HighContrastState = " & Quote ( Get ( HighContrastState ) ) & " ;¶"
-		& "$HostIPAddress = " & Quote ( Get ( HostIPAddress ) ) & " ;¶"
-		& "$HostName = " & Quote ( Get ( HostName ) ) & " ;¶"
-		& "$InstalledFMPlugins = " & Quote ( Get ( InstalledFMPlugins ) ) & " ;¶"
-		& "$ScreenDepth = " & Get ( ScreenDepth ) & " ;¶"
-		& "$ScreenHeight = " & Get ( ScreenHeight ) & " ;¶"
-		& "$ScreenWidth = " & Get ( ScreenWidth ) & " ;¶"
-		& "$SystemIPAddress = " & Quote ( Get ( SystemIPAddress ) ) & " ;¶"
-		& "$SystemLanguage = " & Quote ( Get ( SystemLanguage ) ) & " ;¶"
-		& "$SystemNICAddress = " & Quote ( Get ( SystemNICAddress ) ) & " ;¶"
-		& "$SystemPlatform = " & Get ( SystemPlatform ) & " ;¶"
-		& "$SystemVersion = " & Quote ( Get ( SystemVersion ) ) & " ;¶"
-		& "$UseSystemFormatsState = " & Get ( UseSystemFormatsState ) & " ;¶"
+If ( JSONGetElementType ( JSONLogData ; "" ) â‰  JSONObject ;
+	/* return parameter as-is since it's not a JSONObject */
+	JSONLogData ;
+	
+	If ( IsEmpty ( $$SESSIONID ) ;
+		/* session has not started yet, so create a session id and return session data */
+		Let ( [
+			$$SESSIONID = Get ( UUID ) ;
+			~sessionData =
+				JSONSetElement ( "{}" ;
+					[ "ID" ; $$SESSIONID ; JSONString ] ;
+					[ "ApplicationArchitecture" ; Get ( ApplicationArchitecture ) ; JSONString ] ;
+					[ "ApplicationLanguage" ; Get ( ApplicationLanguage ) ; JSONString ] ;
+					[ "ApplicationVersion" ; Get ( ApplicationVersion ) ; JSONString ] ;
+					[ "ConnectionState" ; Get ( ConnectionState ) ; JSONNumber ] ;
+					[ "Device" ; Get ( Device ) ; JSONNumber  ] ;
+					[ "EncryptionState" ; Get ( EncryptionState ) ; JSONString ] ;
+					[ "FileMakerPath" ; Get ( FileMakerPath ) ; JSONString ] ;
+					[ "HighContrastState" ; Get ( HighContrastState ) ; JSONNumber  ] ;
+					[ "HostApplicationVersion" ; Get ( HostApplicationVersion ) ; JSONString ] ;
+					[ "HostIPAddress" ; Get ( HostIPAddress ) ; JSONString ] ;
+					[ "HostName" ; Get ( HostName ) ; JSONString ] ;
+					[ "InstalledFMPlugins" ; Get ( InstalledFMPlugins ) ; JSONString ] ;
+					[ "SystemAppearance" ; Get ( SystemAppearance ) ; JSONString ] ;
+					[ "SystemIPAddress" ; Get ( SystemIPAddress ) ; JSONString ] ;
+					[ "SystemLanguage" ; Get ( SystemLanguage ) ; JSONString ] ;
+					[ "SystemNICAddress" ; Get ( SystemNICAddress ) ; JSONString ] ;
+					[ "SystemPlatform" ; Get ( SystemPlatform ) ; JSONNumber ] ;
+					[ "SystemVersion" ; Get ( SystemVersion ) ; JSONString ] ;
+					[ "UseSystemFormatsState" ; Get ( UseSystemFormatsState ) ; JSONNumber ] ;
+					[ "PersistentID" ; Get ( PersistentID ) ; JSONString ] ;
+					[ "TimezoneOffset" ;
+						GetAsTime (
+							Get ( CurrentTimestamp ) - Floor ( Get ( CurrentTimeUTCMilliseconds ) / 1000 )
+						)
+					; JSONString ] ;
+					[ "NetworkType" ; Get ( NetworkType ) ; JSONString ] /* Only relevant for FM Go and returns a number */
+				)
+			;
+			~sessionData = If ( Position ( Get ( ApplicationVersion ) ; "Server" ; 1 ; 1 ) = 1 ; ~sessionData ;
+				/**
+				 * log screen/window size info so it can inform UI design decisions
+				 * don't log this for the server; it's windows are not shown to the user
+				 */
+				JSONSetElement ( ~sessionData ;
+					[ "StatusAreaState" ; Get ( StatusAreaState ) ; JSONNumber ] ;
+					[ "ScreenWidth" ; Get ( ScreenWidth ) ; JSONNumber ] ;
+					[ "ScreenHeight" ; Get ( ScreenHeight ) ; JSONNumber ] ;
+					[ "ScreenDepth" ; Get ( ScreenDepth ) ; JSONNumber ] ;
+					[ "ScreenScaleFactor" ; Get ( ScreenScaleFactor ) ; JSONNumber ] ;
+					[ "WindowDesktopWidth" ; Get ( WindowDesktopWidth ) ; JSONNumber ] ;
+					[ "WindowDesktopHeight" ; Get ( WindowDesktopHeight ) ; JSONNumber ] ;
+					[ "WindowWidth" ; Get ( WindowWidth ) ; JSONNumber ] ;
+					[ "WindowHeight" ; Get ( WindowHeight ) ; JSONNumber ] ;
+					[ "WindowContentWidth" ; Get ( WindowContentWidth ) ; JSONNumber ] ;
+					[ "WindowContentHeight" ; Get ( WindowContentHeight ) ; JSONNumber ] ;
+					[ "WindowOrientation" ; Get ( WindowOrientation ) ; JSONNumber ]
+				)
+			)
+		] ;
+			JSONSetElement ( JSONLogData ; "SESSION" ; ~sessionData ; JSONObject )
+		) ;
+		
+		/* else: add existing session id */
+		JSONSetElement ( JSONLogData ;
+			[ "SESSION.ID" ; $$SESSIONID ; JSONString ]
+		)
 	)
 )
-& "$SESSIONID = " & Quote ( $$SESSIONID ) & " ;¶"

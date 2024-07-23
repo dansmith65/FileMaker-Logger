@@ -1,13 +1,15 @@
 /**
  * =====================================
- * LogData ( theLogLevel ; theLogMessage )
+ * LogData ( theLogLevel ; theLogMessage ; JSONObjectToLog )
  *
  * RETURNS:
- *		(string) Let format dictionary which describes the current environment.
+ *		(string) JSON Object which describes the current environment.
  *
  * PARAMETERS:
  *		theLogLevel = (numeric) 0 thru [n]
  *		theLogMessage = (text, optional) some text describing the log entry
+ *		JSONObjectToLog = (optional) a JSON Object containing additional data to log
+ *			this will be the base object that additional data is added to
  *
  * EXAMPLE:
  *		LogData ( LogLevel2Warn ; "error when going to layout: 'Customer: Detail'" )
@@ -17,10 +19,16 @@
  *		LogData ( 3 ; "script runtime: 0.3 seconds" )
  *
  * NOTES:
- *		This function should be modified to capture any relevant values for
- *		your solution.
+ *		This function should be modified to capture any relevant values for your solution.
  *
  * HISTORY:
+ *		MODIFIED on 2024-JUL-12 by Daniel Smith dan@filemaker.consulting
+ *			- use JSONGetElementType for ScriptParameter and ScriptResult
+ *			- remove ScriptResult; that's more relevant to errors and should be manually
+ *			  added to non-error log entries, if needed
+ *			- replace CurrentHostTimestamp with TimestampUTC
+ *		MODIFIED on 2024-APR-16 by Daniel Smith dan@filemaker.consulting
+ *			- convert to JSON and add JSONObjectToLog parameter
  *		MODIFIED on 2015-JUN-02 by Daniel Smith dansmith65@gmail.com
  *			- include ApplicationVersion for all log levels
  *		MODIFIED on 2014-OCT-02 by Daniel Smith dansmith65@gmail.com
@@ -46,73 +54,63 @@
  *
  * LINK:
  *		https://github.com/dansmith65/FileMaker-Logger
- *		http://filemakerstandards.org/x/LACm
  * =====================================
  */
 
-// ALL LOG LEVELS
-// ============================================================================
-"$LogLevel = " & theLogLevel & " ;¶"
-& If ( not IsEmpty ( theLogMessage ) ;
-	"$logMessage = " & Quote ( theLogMessage ) & " ;¶"
-)
-& "$AccountName = " & Quote ( Get ( AccountName ) ) & " ;¶"
-& "$UserName = " & Quote ( Get ( UserName ) ) & " ;¶"
-& "$CurrentHostTimestamp = GetAsTimeStamp ( " & Quote ( Get ( CurrentHostTimestamp ) ) & " ) ;¶"
-// possibly use UTC in addition to/instead of CurrentHostTimeStamp, may want to only store this once per session
-//    FM12: Get ( UTCmSecs )
-//    FM13: Get ( CurrentTimeUTCMilliseconds )
-& "$FileName = " & Quote ( Get ( FileName ) ) & " ;¶"
-& "$ScriptName = " & Quote ( Get ( ScriptName ) ) & " ;¶"
-& "$ScriptParameter = " & Quote ( Get ( ScriptParameter ) ) & " ;¶"
-& "$ScriptResult = " & Quote ( Get ( ScriptResult ) ) & " ;¶"
-& "$ApplicationVersion = " & Quote ( Get ( ApplicationVersion ) ) & " ;¶"
-
-// if account priv. set and current priv. set are different, there are two reasons I know of that can cause this:
-//	1. script was run with Full Access privileges
-//	2. account was changed while user was logged in and they have not logged out/in again
-& "$AccountPrivilegeSetName = " & Quote ( Get ( AccountPrivilegeSetName ) ) & " ;¶"
-& "$CurrentPrivilegeSetName = " & Quote ( Get ( CurrentPrivilegeSetName ) ) & " ;¶"
-
-// used by LogWriteEnabled custom function:
-& If ( not IsEmpty ( $logLevelToWriteOffset ) ;
-	"$logLevelToWriteOffset = " & $logLevelToWriteOffset & " ;¶"
-)
-& If ( not IsEmpty ( $$LOGLEVELTOWRITEOFFSET ) ;
-	"$LOGLEVELTOWRITEOFFSETglobal = " & $$LOGLEVELTOWRITEOFFSET & " ;¶"
-)
-
-
-// LOG LEVELS = 2
-// ============================================================================
-& If ( theLogLevel = 2 ;
-	""
-	& "$AllowAbortState = " & Get ( AllowAbortState ) & " ;¶"
-	& "$ErrorCaptureState = " & Get ( ErrorCaptureState ) & " ;¶"
-	& "$FilePath = " & Quote ( Get ( FilePath ) ) & " ;¶"
-	& "$LayoutAccess = " & Get ( LayoutAccess ) & " ;¶"
-	& "$LayoutName = " & Quote ( Get ( LayoutName ) ) & " ;¶"
-	& "$LayoutTableName = " & Quote ( Get ( LayoutTableName ) ) & " ;¶"
-	& "$LayoutViewState = " & Get ( LayoutViewState ) & " ;¶"
-	& "$MultiUserState = " & Get ( MultiUserState ) & " ;¶"
-	& "$RecordAccess = " & Get ( RecordAccess ) & " ;¶"
-	& "$RecordID = " & Get ( RecordID ) & " ;¶"
-	& "$RecordOpenCount = " & Get ( RecordOpenCount ) & " ;¶"
-	& "$RecordOpenState = " &  Get ( RecordOpenState ) & " ;¶"
-	& "$SortState = " & Get ( SortState ) & " ;¶"
-	& "$StatusAreaState = " & Get ( StatusAreaState ) & " ;¶"
-	// UserCount is disabled by default because it is slow to calculate (~1000 times slower than Get ( UserName ) )
-	// & "$UserCount = " & Get ( UserCount ) & " ;¶"
-	& "$WindowMode = " & Get ( WindowMode ) & " ;¶"
-	& "$WindowName = " & Quote ( Get ( WindowName ) ) & " ;¶"
-	& "$WindowOrientation = " & Quote ( Get ( WindowOrientation ) ) & " ;¶"
-	& "$WindowStyle = " & Get ( WindowStyle ) & " ;¶"
-	& "$WindowVisible = " & Get ( WindowVisible ) & " ;¶"
-	& If ( not IsEmpty ( Get ( ActiveFieldName ) ) ;
-		"$ActiveFieldName = " & Quote ( Get ( ActiveFieldName ) ) & " ;¶"
-		& "$ActiveFieldTableName = " & Quote ( Get ( ActiveFieldTableName ) ) & " ;¶"
+Let ( [
+	~result = Case (
+		IsEmpty ( JSONObjectToLog ) ;
+			"{}"
+		;
+		JSONGetElementType ( JSONObjectToLog ; "" ) = JSONObject ;
+			JSONObjectToLog
+		;
+		/* else: store it as a string */
+			JSONSetElement ( "{}" ; "JSONObjectToLog" ; JSONObjectToLog ; JSONString )
+	) ;
+	~result = JSONSetElement ( ~result ;
+		[ "logLevel" ; theLogLevel ; JSONNumber ] ;
+		[ "logMessage" ; theLogMessage ; JSONString ] ;
+		[ "AccountName" ; Get ( AccountName ) ; JSONString ] ;
+		[ "UserName" ; Get ( UserName ) ; JSONString ] ;
+		[ "TimestampUTC" ; GetAsTimestamp ( Get ( CurrentTimeUTCMilliseconds ) / 1000 ) ; JSONString ] ;
+		[ "FileName" ; Get ( FileName ) ; JSONString ] ;
+		[ "ScriptName" ; Get ( ScriptName ) ; JSONString ] ;
+		[ "ScriptParameter" ; Get ( ScriptParameter ) ; JSONGetElementType ( Get ( ScriptParameter ) ; "" )  ] ;
+		[ "ApplicationVersion" ; Get ( ApplicationVersion ) ; JSONString ] ;
+		[ "AccountPrivilegeSetName" ; Get ( AccountPrivilegeSetName ) ; JSONString ] ;
+		[ "CurrentPrivilegeSetName" ; Get ( CurrentPrivilegeSetName ) ; JSONString ]
+	) ;
+	~result = If ( IsEmpty ( $logLevelToWriteOffset ) ; ~result ;
+		JSONSetElement ( ~result ; "logLevelToWriteOffset" ; $logLevelToWriteOffset ; JSONNumber )
+	) ;
+	~result = If ( IsEmpty ( $$LOGLEVELTOWRITEOFFSET ) ; ~result ;
+		JSONSetElement ( ~result ; "LOGLEVELTOWRITEOFFSET" ; $$LOGLEVELTOWRITEOFFSET ; JSONNumber )
+	) ;
+	~result = If ( theLogLevel > 2 ; ~result ;
+		JSONSetElement ( ~result ;
+			[ "AllowAbortState" ; Get ( AllowAbortState ) ; JSONNumber ] ;
+			[ "ErrorCaptureState" ; Get ( ErrorCaptureState ) ; JSONNumber ] ;
+			[ "FilePath" ; Get ( FilePath ) ; JSONString ] ;
+			[ "LayoutAccess" ; Get ( LayoutAccess ) ; JSONNumber ] ;
+			[ "LayoutName" ; Get ( LayoutName ) ; JSONString ] ;
+			[ "LayoutTableName" ; Get ( LayoutTableName ) ; JSONString ] ;
+			[ "LayoutViewState" ; Get ( LayoutViewState ) ; JSONNumber ] ;
+			[ "MultiUserState" ; Get ( MultiUserState ) ; JSONNumber ] ;
+			[ "RecordAccess" ; Get ( RecordAccess ) ; JSONNumber ] ;
+			[ "RecordID" ; Get ( RecordID ) ; JSONNumber ] ;
+			[ "RecordOpenCount" ; Get ( RecordOpenCount ) ; JSONNumber ] ;
+			[ "RecordOpenState" ; Get ( RecordOpenState ) ; JSONNumber ] ;
+			[ "SortState" ; Get ( SortState ) ; JSONNumber ] ;
+			[ "StatusAreaState" ; Get ( StatusAreaState ) ; JSONNumber ] ;
+			[ "WindowMode" ; Get ( WindowMode ) ; JSONNumber ] ;
+			[ "WindowName" ; Get ( WindowName ) ; JSONString ] ;
+			[ "WindowOrientation" ; Get ( WindowOrientation ) ; JSONString ] ;
+			[ "WindowStyle" ; Get ( WindowStyle ) ; JSONNumber ] ;
+			[ "WindowVisible" ; Get ( WindowVisible ) ; JSONNumber ] ;
+			[ "ActiveFieldName" ; Get ( ActiveFieldName ) ; JSONString ] ;
+			[ "ActiveFieldTableName" ; Get ( ActiveFieldTableName ) ; JSONString ] ;
+			[ "ActiveLayoutObjectName" ; Get ( ActiveLayoutObjectName ) ; JSONString ]
+		)
 	)
-	& If ( not IsEmpty ( Get ( ActiveLayoutObjectName ) ) ;
-		"$ActiveLayoutObjectName = " & Quote ( Get ( ActiveLayoutObjectName ) ) & " ;¶"
-	)
-)
+] ; ~result )

@@ -1,3 +1,13 @@
+# 2.0.0 #
+
+released 2024-JUL-22
+
+- Switch from Let-notation to JSON as the expected format of the raw log data.
+- move Logger module to ExampleApp file
+- updated custom functions and moved them to ExampleApp file
+
+
+
 # 1.0.0 #
 
 released 2017-DEC-01

@@ -1,3 +1,27 @@
+# 2.0.0 #
+
+released 2024-JUL-22
+
+- Switch from Let-notation to JSON as the expected format of the raw log data.
+- Remove LogItem table
+- Update/improve UI adding various features which I'm going to try to list here
+
+
+
+## 1.2.1 ##
+
+released 2019-JAN-04
+
+- bug fixes
+	- JSON web viewer failed to parse JSON if it contained an array with a null value
+
+detailed list of changes:
+- layouts
+	- modified
+		- Log: Detail
+			- update "JSON Web Viewer: JS" in text object off the visible area of the layout
+
+
 ## 1.2.0 ##
 
 released 2018-JAN-26

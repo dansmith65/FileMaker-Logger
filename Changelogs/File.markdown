@@ -1,4 +1,15 @@
-## 2.0.1 ##
+### 2.0.2 ###
+
+released 2024-AUG-02
+
+detailed list of changes:
+scripts
+	modified
+		Log Viewer module
+			- update from 2.1.0 to 2.1.1
+
+
+### 2.0.1 ###
 
 released 2024-JUL-23
 

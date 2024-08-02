@@ -1,3 +1,13 @@
+### 2.1.1 ###
+
+released 2024-AUG-02
+
+scripts
+	modified
+		Log Viewer: FM: Delete Old Records
+			- fix error trapping after Perform Find step
+
+
 ## 2.1.0 ##
 
 released 2024-JUL-23
